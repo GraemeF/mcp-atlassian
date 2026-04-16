@@ -73,10 +73,16 @@ def _parse_inline_formatting(
 
     Handles: bold (**), italic (*), inline code (`), links ([text](url)),
     strikethrough (~~), Jira-flavored user mentions
-    ([~accountid:ACCOUNT_ID] or @[Display Name](accountid:ACCOUNT_ID)), and
-    status lozenges ({status:color=green|title=Done}).
+    ([~accountid:ACCOUNT_ID] or @[Display Name](accountid:ACCOUNT_ID)),
+    status lozenges ({status:color=green|title=Done}), and bare Atlassian
+    issue URLs.
 
     Bare Jira issue keys are converted to links when ``jira_base_url`` is set.
+
+    A bare Atlassian issue URL (e.g. ``https://example.atlassian.net/browse/PROJ-1``)
+    is emitted as an ADF ``inlineCard`` node, which renders in Jira Cloud as a rich
+    card showing the ticket icon, title and status badge. A Markdown link
+    ``[PROJ-1](url)`` produces an ordinary hyperlink instead.
 
     The [~accountid:...] mention syntax mirrors what Jira's v2 wiki text
     returns when a real ADF mention is read back, so the read and write paths
@@ -103,6 +109,8 @@ def _parse_inline_formatting(
     # Pattern order matters: mention before link, bold before italic,
     # code before others. Status sits after code so a backticked
     # `{status:...}` stays literal.
+    # jira_card must come before the plain-text fallback so bare Atlassian issue
+    # URLs are emitted as inlineCard nodes rather than plain text.
     inline_re = re.compile(
         r"\[~accountid:(?P<wiki_mention_id>[^\]]+)\]"
         r"|@\[(?P<display_mention_text>[^\]]+)\]"
@@ -114,6 +122,7 @@ def _parse_inline_formatting(
         r"|~~(?P<strike_inner>.+?)~~"
         r"|\[(?P<link_text>[^\]]+)\]\((?P<link_href>[^)]+)\)"
         r"|(?<!\*)\*(?!\*)(?P<italic_inner>.+?)(?<!\*)\*(?!\*)"
+        r"|(?P<jira_card>https?://\S+/browse/[A-Z][A-Z0-9_]+-\d+\b)"
     )
 
     pos = 0
@@ -195,6 +204,13 @@ def _parse_inline_formatting(
                 m.group("italic_inner"),
                 jira_base_url,
                 [{"type": "em"}],
+            )
+        elif m.group("jira_card") is not None:
+            nodes.append(
+                {
+                    "type": "inlineCard",
+                    "attrs": {"url": m.group("jira_card")},
+                }
             )
 
         pos = m.end()
