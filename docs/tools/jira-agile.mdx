@@ -146,5 +146,47 @@ Add issues to a Jira sprint.
 Get sprint IDs from `jira_get_sprints_from_board`. Issue keys are validated server-side — invalid keys will cause an error.
 </Tip>
 
+---
+
+### Move Issues to Board
+
+Move issues from the backlog onto a board that has a backlog.
+
+<Note>This is a **write** tool. Disabled when `READ_ONLY_MODE=true`.</Note>
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `board_id` | `string` | Yes | Board ID to move the issues onto |
+| `issue_keys` | `string` | Yes | Comma-separated issue keys, at most 50 (e.g., 'PROJ-1,PROJ-2') |
+
+**Example:**
+
+```json
+{"board_id": "42", "issue_keys": "PROJ-1,PROJ-2"}
+```
+
+---
+
+### Move Issues to Board Backlog
+
+Move issues on a board back into that board's backlog. On a board with sprints this removes the issues from their sprints.
+
+<Note>This is a **write** tool. Disabled when `READ_ONLY_MODE=true`.</Note>
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `board_id` | `string` | Yes | Board ID whose backlog the issues go to |
+| `issue_keys` | `string` | Yes | Comma-separated issue keys, at most 50 (e.g., 'PROJ-1,PROJ-2') |
+
+**Example:**
+
+```json
+{"board_id": "42", "issue_keys": "PROJ-1"}
+```
+
 
 ---

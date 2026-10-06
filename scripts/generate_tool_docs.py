@@ -53,6 +53,8 @@ CATEGORY_TOOLS: dict[str, list[str]] = {
         "jira_create_sprint",
         "jira_update_sprint",
         "jira_add_issues_to_sprint",
+        "jira_move_issues_to_board",
+        "jira_move_issues_to_board_backlog",
     ],
     "jira-comments-worklogs": [
         "jira_add_comment",

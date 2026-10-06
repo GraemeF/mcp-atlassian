@@ -99,3 +99,41 @@ def test_get_all_agile_boards_model(boards_mixin, mock_boards):
     assert result == [
         JiraBoard.from_api_response(value) for value in mock_boards["values"]
     ]
+
+
+def test_move_issues_to_board(boards_mixin):
+    """Test move_issues_to_board posts the keys to the board's issue endpoint."""
+    result = boards_mixin.move_issues_to_board("5983", ["PROJ-1", "PROJ-2"])
+
+    assert result is True
+    boards_mixin.jira.post.assert_called_once_with(
+        "rest/agile/1.0/board/5983/issue",
+        data={"issues": ["PROJ-1", "PROJ-2"]},
+    )
+
+
+def test_move_issues_to_board_http_error(boards_mixin):
+    """Test move_issues_to_board propagates HTTPError."""
+    boards_mixin.jira.post.side_effect = requests.HTTPError("400 Bad Request")
+
+    with pytest.raises(requests.HTTPError):
+        boards_mixin.move_issues_to_board("5983", ["PROJ-1"])
+
+
+def test_move_issues_to_board_backlog(boards_mixin):
+    """Test move_issues_to_board_backlog posts the keys to the board's backlog."""
+    result = boards_mixin.move_issues_to_board_backlog("5983", ["PROJ-1"])
+
+    assert result is True
+    boards_mixin.jira.post.assert_called_once_with(
+        "rest/agile/1.0/backlog/5983/issue",
+        data={"issues": ["PROJ-1"]},
+    )
+
+
+def test_move_issues_to_board_backlog_http_error(boards_mixin):
+    """Test move_issues_to_board_backlog propagates HTTPError."""
+    boards_mixin.jira.post.side_effect = requests.HTTPError("400 Bad Request")
+
+    with pytest.raises(requests.HTTPError):
+        boards_mixin.move_issues_to_board_backlog("5983", ["PROJ-1"])

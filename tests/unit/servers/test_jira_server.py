@@ -411,6 +411,8 @@ def test_jira_mcp(mock_jira_fetcher, mock_base_jira_config):
         get_user_profile,
         get_worklog,
         link_to_epic,
+        move_issues_to_board,
+        move_issues_to_board_backlog,
         remove_issue_link,
         search,
         search_fields,
@@ -456,6 +458,8 @@ def test_jira_mcp(mock_jira_fetcher, mock_base_jira_config):
     jira_sub_mcp.add_tool(create_sprint)
     jira_sub_mcp.add_tool(update_sprint)
     jira_sub_mcp.add_tool(add_issues_to_sprint)
+    jira_sub_mcp.add_tool(move_issues_to_board)
+    jira_sub_mcp.add_tool(move_issues_to_board_backlog)
     jira_sub_mcp.add_tool(batch_create_versions)
     test_mcp.mount(jira_sub_mcp, prefix="jira")
     return test_mcp
@@ -2135,6 +2139,42 @@ async def test_add_issues_to_sprint_single_key(jira_client, mock_jira_fetcher):
     result = json.loads(response.content[0].text)
     assert "1" in result["message"]
     assert result["sprint_id"] == "200"
+
+
+@pytest.mark.anyio
+async def test_move_issues_to_board(jira_client, mock_jira_fetcher):
+    """Test move_issues_to_board splits comma-separated keys and calls mixin."""
+    mock_jira_fetcher.move_issues_to_board.return_value = True
+
+    response = await jira_client.call_tool(
+        "jira_move_issues_to_board",
+        {"board_id": "5983", "issue_keys": "PROJ-1, PROJ-2"},
+    )
+
+    mock_jira_fetcher.move_issues_to_board.assert_called_once_with(
+        "5983", ["PROJ-1", "PROJ-2"]
+    )
+    result = json.loads(response.content[0].text)
+    assert result["board_id"] == "5983"
+    assert result["issue_keys"] == ["PROJ-1", "PROJ-2"]
+
+
+@pytest.mark.anyio
+async def test_move_issues_to_board_backlog(jira_client, mock_jira_fetcher):
+    """Test move_issues_to_board_backlog splits comma-separated keys and calls mixin."""
+    mock_jira_fetcher.move_issues_to_board_backlog.return_value = True
+
+    response = await jira_client.call_tool(
+        "jira_move_issues_to_board_backlog",
+        {"board_id": "5983", "issue_keys": "PROJ-1"},
+    )
+
+    mock_jira_fetcher.move_issues_to_board_backlog.assert_called_once_with(
+        "5983", ["PROJ-1"]
+    )
+    result = json.loads(response.content[0].text)
+    assert result["board_id"] == "5983"
+    assert result["issue_keys"] == ["PROJ-1"]
 
 
 # ============================================================================

@@ -86,3 +86,45 @@ class BoardsMixin(JiraClient):
             limit=limit,
         )
         return [JiraBoard.from_api_response(board) for board in boards]
+
+    def move_issues_to_board(self, board_id: str, issue_keys: list[str]) -> bool:
+        """Move issues from the backlog onto a board.
+
+        Args:
+            board_id: The board to move the issues onto.
+            issue_keys: Issue keys to move, at most 50 (e.g., ["PROJ-1"]).
+
+        Returns:
+            True if successful.
+
+        Raises:
+            requests.HTTPError: If the API call fails.
+        """
+        self.jira.post(
+            f"rest/agile/1.0/board/{board_id}/issue",
+            data={"issues": issue_keys},
+        )
+        return True
+
+    def move_issues_to_board_backlog(
+        self, board_id: str, issue_keys: list[str]
+    ) -> bool:
+        """Move issues already on a board back into that board's backlog.
+
+        On a board with sprints this removes the issues from their sprints.
+
+        Args:
+            board_id: The board whose backlog the issues go to.
+            issue_keys: Issue keys to move, at most 50 (e.g., ["PROJ-1"]).
+
+        Returns:
+            True if successful.
+
+        Raises:
+            requests.HTTPError: If the API call fails.
+        """
+        self.jira.post(
+            f"rest/agile/1.0/backlog/{board_id}/issue",
+            data={"issues": issue_keys},
+        )
+        return True
