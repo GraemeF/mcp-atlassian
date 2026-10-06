@@ -504,6 +504,7 @@ def test_jira_mcp(mock_jira_fetcher, mock_base_jira_config):
         link_to_epic,
         move_issue,
         move_issues_to_backlog,
+        move_issues_to_board,
         remove_issue_link,
         search,
         search_assignable_users,
@@ -562,6 +563,7 @@ def test_jira_mcp(mock_jira_fetcher, mock_base_jira_config):
     jira_sub_mcp.add_tool(delete_issue)
     jira_sub_mcp.add_tool(move_issue)
     jira_sub_mcp.add_tool(move_issues_to_backlog)
+    jira_sub_mcp.add_tool(move_issues_to_board)
     jira_sub_mcp.add_tool(add_comment)
     jira_sub_mcp.add_tool(edit_comment)
     jira_sub_mcp.add_tool(add_worklog)
@@ -5061,7 +5063,38 @@ async def test_move_issues_to_backlog_parses_keys(jira_client, mock_jira_fetcher
     assert content["issue_keys"] == ["TEST-1", "TEST-2"]
     assert content["message"] == "Successfully moved 2 issue(s) to backlog"
     mock_jira_fetcher.move_issues_to_backlog.assert_called_once_with(
-        ["TEST-1", "TEST-2"]
+        ["TEST-1", "TEST-2"], board_id=None
+    )
+
+
+@pytest.mark.anyio
+async def test_move_issues_to_backlog_of_board(jira_client, mock_jira_fetcher):
+    """Test moving issues to a board's backlog passes the board on."""
+    response = await jira_client.call_tool(
+        "jira_move_issues_to_backlog", {"issue_keys": "TEST-1", "board_id": "5983"}
+    )
+    content = json.loads(response.content[0].text)
+
+    assert content["board_id"] == "5983"
+    mock_jira_fetcher.move_issues_to_backlog.assert_called_once_with(
+        ["TEST-1"], board_id="5983"
+    )
+
+
+@pytest.mark.anyio
+async def test_move_issues_to_board_parses_keys(jira_client, mock_jira_fetcher):
+    """Test moving issues to a board parses comma-separated issue keys."""
+    response = await jira_client.call_tool(
+        "jira_move_issues_to_board",
+        {"board_id": "5983", "issue_keys": "TEST-1, TEST-2"},
+    )
+    content = json.loads(response.content[0].text)
+
+    assert content["issue_keys"] == ["TEST-1", "TEST-2"]
+    assert content["board_id"] == "5983"
+    assert content["message"] == "Successfully moved 2 issue(s) to board"
+    mock_jira_fetcher.move_issues_to_board.assert_called_once_with(
+        "5983", ["TEST-1", "TEST-2"]
     )
 
 

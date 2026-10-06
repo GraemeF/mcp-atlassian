@@ -3297,11 +3297,62 @@ async def move_issues_to_backlog(
         str,
         Field(description="Comma-separated issue keys (e.g., 'PROJ-1,PROJ-2')"),
     ],
+    board_id: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Board whose backlog the issues go to. Needed to take issues "
+                "off a Kanban board that has a backlog."
+            ),
+            default=None,
+        ),
+    ] = None,
 ) -> str:
     """Move issues to the backlog, removing them from any sprint.
 
     Args:
         ctx: The FastMCP context.
+        issue_keys: Comma-separated issue keys.
+        board_id: Optional board whose backlog the issues go to.
+
+    Returns:
+        JSON string with success message.
+
+    Raises:
+        ValueError: If in read-only mode or Jira client unavailable.
+    """
+    jira = await get_jira_fetcher(ctx)
+    keys_list = [k.strip() for k in issue_keys.split(",") if k.strip()]
+    jira.move_issues_to_backlog(keys_list, board_id=board_id)
+    result = {
+        "message": f"Successfully moved {len(keys_list)} issue(s) to backlog",
+        "issue_keys": keys_list,
+    }
+    if board_id:
+        result["board_id"] = board_id
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+
+@jira_mcp.tool(
+    tags={"jira", "write", "toolset:jira_agile"},
+    annotations={"title": "Move Issues to Board", "readOnlyHint": False},
+)
+@check_write_access
+async def move_issues_to_board(
+    ctx: Context,
+    board_id: Annotated[str, Field(description="Board ID to move the issues onto")],
+    issue_keys: Annotated[
+        str,
+        Field(
+            description="Comma-separated issue keys, at most 50 (e.g., 'PROJ-1,PROJ-2')"
+        ),
+    ],
+) -> str:
+    """Move issues from the backlog onto a Kanban board that has a backlog.
+
+    Args:
+        ctx: The FastMCP context.
+        board_id: The ID of the board.
         issue_keys: Comma-separated issue keys.
 
     Returns:
@@ -3312,9 +3363,10 @@ async def move_issues_to_backlog(
     """
     jira = await get_jira_fetcher(ctx)
     keys_list = [k.strip() for k in issue_keys.split(",") if k.strip()]
-    jira.move_issues_to_backlog(keys_list)
+    jira.move_issues_to_board(board_id, keys_list)
     result = {
-        "message": f"Successfully moved {len(keys_list)} issue(s) to backlog",
+        "message": f"Successfully moved {len(keys_list)} issue(s) to board",
+        "board_id": board_id,
         "issue_keys": keys_list,
     }
     return json.dumps(result, indent=2, ensure_ascii=False)

@@ -149,11 +149,36 @@ class SprintsMixin(JiraClient):
         )
         return True
 
-    def move_issues_to_backlog(self, issue_keys: list[str]) -> bool:
+    def move_issues_to_backlog(
+        self, issue_keys: list[str], board_id: str | None = None
+    ) -> bool:
         """Move issues to the backlog (removes them from any sprint).
 
         Args:
             issue_keys: List of issue keys to move (e.g., ["PROJ-1", "PROJ-2"]).
+            board_id: Board whose backlog the issues go to. Needed to take
+                issues off a Kanban board that has a backlog.
+
+        Returns:
+            True if successful.
+
+        Raises:
+            requests.HTTPError: If the API call fails.
+        """
+        endpoint = (
+            f"rest/agile/1.0/backlog/{board_id}/issue"
+            if board_id
+            else "rest/agile/1.0/backlog/issue"
+        )
+        self.jira.post(endpoint, data={"issues": issue_keys})
+        return True
+
+    def move_issues_to_board(self, board_id: str, issue_keys: list[str]) -> bool:
+        """Move issues from the backlog onto a board that has a backlog.
+
+        Args:
+            board_id: The board to move the issues onto.
+            issue_keys: List of issue keys to move, at most 50.
 
         Returns:
             True if successful.
@@ -162,7 +187,7 @@ class SprintsMixin(JiraClient):
             requests.HTTPError: If the API call fails.
         """
         self.jira.post(
-            "rest/agile/1.0/backlog/issue",
+            f"rest/agile/1.0/board/{board_id}/issue",
             data={"issues": issue_keys},
         )
         return True
