@@ -503,6 +503,21 @@ class TestCommentsMixin:
             link_mark["attrs"]["href"] == "https://test.atlassian.net/browse/PROJ-123"
         )
 
+    def test_markdown_to_jira_links_issue_keys_to_site_url(self, jira_config_factory):
+        """Behind the API gateway, issue keys link to the site, not the gateway."""
+        config = jira_config_factory(
+            url="https://api.atlassian.com/ex/jira/cloud-id",
+            site_url="https://test.atlassian.net",
+        )
+        mixin = CommentsMixin(config=config)
+        result = mixin._markdown_to_jira("Blocked by PROJ-123.")
+        para = result["content"][0]
+        link_node = next(n for n in para["content"] if n.get("text") == "PROJ-123")
+        link_mark = next(m for m in link_node["marks"] if m["type"] == "link")
+        assert (
+            link_mark["attrs"]["href"] == "https://test.atlassian.net/browse/PROJ-123"
+        )
+
     def test_markdown_to_jira_cloud_empty(self, comments_mixin):
         """Test _markdown_to_jira with empty text on Cloud returns ADF."""
         result = comments_mixin._markdown_to_jira("")

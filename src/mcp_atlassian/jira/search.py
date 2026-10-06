@@ -191,7 +191,7 @@ class SearchMixin(JiraClient, IssueOperationsProto):
 
                 search_result = JiraSearchResult.from_api_response(
                     response_dict,
-                    base_url=self.config.url,
+                    base_url=self.config.site_url,
                     requested_fields=fields_param,
                 )
 
@@ -208,7 +208,9 @@ class SearchMixin(JiraClient, IssueOperationsProto):
 
                 # Convert the response to a search result model
                 search_result = JiraSearchResult.from_api_response(
-                    response, base_url=self.config.url, requested_fields=fields_param
+                    response,
+                    base_url=self.config.site_url,
+                    requested_fields=fields_param,
                 )
 
                 # Return the full search result object
@@ -275,7 +277,7 @@ class SearchMixin(JiraClient, IssueOperationsProto):
 
             # Convert the response to a search result model
             search_result = JiraSearchResult.from_api_response(
-                response, base_url=self.config.url, requested_fields=fields_param
+                response, base_url=self.config.site_url, requested_fields=fields_param
             )
             return search_result
         except requests.HTTPError as e:
