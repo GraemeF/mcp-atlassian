@@ -568,6 +568,55 @@ class TestMarkdownToAdf:
         else:
             assert not link_marks
 
+    # -- Inline cards (bare Atlassian issue URLs) ---------------------------
+
+    def test_bare_jira_url_produces_inline_card(self):
+        """A bare Atlassian browse URL becomes an inlineCard node."""
+        result = markdown_to_adf("https://example.atlassian.net/browse/PROJ-123")
+        para = result["content"][0]
+        card_nodes = [n for n in para["content"] if n["type"] == "inlineCard"]
+        assert len(card_nodes) == 1
+        assert card_nodes[0]["attrs"]["url"] == (
+            "https://example.atlassian.net/browse/PROJ-123"
+        )
+
+    def test_bare_jira_url_in_sentence(self):
+        """A bare URL embedded in prose still produces an inlineCard node."""
+        result = markdown_to_adf(
+            "See https://example.atlassian.net/browse/TIP-42 for context."
+        )
+        para = result["content"][0]
+        card_nodes = [n for n in para["content"] if n["type"] == "inlineCard"]
+        assert len(card_nodes) == 1
+        assert card_nodes[0]["attrs"]["url"] == (
+            "https://example.atlassian.net/browse/TIP-42"
+        )
+
+    def test_bare_jira_url_stays_a_card_when_issue_keys_autolink(self):
+        """The issue key inside a bare URL is not autolinked separately."""
+        result = markdown_to_adf(
+            "See https://example.atlassian.net/browse/TIP-42 for context.",
+            jira_base_url="https://example.atlassian.net",
+        )
+        para = result["content"][0]
+        assert [n["type"] for n in para["content"]] == ["text", "inlineCard", "text"]
+
+    def test_markdown_link_does_not_produce_inline_card(self):
+        """[text](url) with a browse URL stays a plain hyperlink, not a card."""
+        result = markdown_to_adf(
+            "[PROJ-1](https://example.atlassian.net/browse/PROJ-1)"
+        )
+        para = result["content"][0]
+        card_nodes = [n for n in para["content"] if n["type"] == "inlineCard"]
+        link_nodes = [
+            n
+            for n in para["content"]
+            if n["type"] == "text"
+            and any(m["type"] == "link" for m in n.get("marks", []))
+        ]
+        assert len(card_nodes) == 0
+        assert len(link_nodes) == 1
+
     # -- Code blocks --------------------------------------------------------
 
     def test_code_block_with_lang(self):
