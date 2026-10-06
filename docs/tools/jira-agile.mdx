@@ -156,5 +156,21 @@ Move issues to the backlog, removing them from any sprint.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `issue_keys` | `string` | Yes | Comma-separated issue keys (e.g., 'PROJ-1,PROJ-2') |
+| `board_id` | `string` | No | Board whose backlog the issues go to. Needed to take issues off a Kanban board that has a backlog. |
+
+---
+
+### Move Issues to Board
+
+Move issues from the backlog onto a Kanban board that has a backlog.
+
+<Note>This is a **write** tool. Disabled when `READ_ONLY_MODE=true`.</Note>
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `board_id` | `string` | Yes | Board ID to move the issues onto |
+| `issue_keys` | `string` | Yes | Comma-separated issue keys, at most 50 (e.g., 'PROJ-1,PROJ-2') |
 
 ---

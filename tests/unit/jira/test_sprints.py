@@ -428,6 +428,38 @@ def test_move_issues_to_backlog_http_error(sprints_mixin):
     sprints_mixin.jira.post.assert_called_once()
 
 
+def test_move_issues_to_backlog_of_board(sprints_mixin):
+    """Test move_issues_to_backlog with a board uses that board's backlog."""
+    result = sprints_mixin.move_issues_to_backlog(["PROJ-1"], board_id="5983")
+
+    assert result is True
+    sprints_mixin.jira.post.assert_called_once_with(
+        "rest/agile/1.0/backlog/5983/issue",
+        data={"issues": ["PROJ-1"]},
+    )
+
+
+def test_move_issues_to_board(sprints_mixin):
+    """Test move_issues_to_board posts the keys to the board's issue endpoint."""
+    result = sprints_mixin.move_issues_to_board("5983", ["PROJ-1", "PROJ-2"])
+
+    assert result is True
+    sprints_mixin.jira.post.assert_called_once_with(
+        "rest/agile/1.0/board/5983/issue",
+        data={"issues": ["PROJ-1", "PROJ-2"]},
+    )
+
+
+def test_move_issues_to_board_http_error(sprints_mixin):
+    """Test move_issues_to_board propagates HTTPError."""
+    sprints_mixin.jira.post.side_effect = requests.HTTPError(
+        response=MagicMock(content="Server error")
+    )
+
+    with pytest.raises(requests.HTTPError):
+        sprints_mixin.move_issues_to_board("5983", ["PROJ-1"])
+
+
 def test_move_issues_to_backlog_generic_exception(sprints_mixin):
     """Test move_issues_to_backlog propagates generic exceptions."""
     sprints_mixin.jira.post.side_effect = Exception("Connection error")
