@@ -227,7 +227,7 @@ class JiraClient:
 
         # Initialize the text preprocessor for text processing capabilities
         self.preprocessor = JiraPreprocessor(
-            base_url=self.config.url,
+            base_url=self.config.site_url,
             disable_translation=self.config.disable_jira_markup_translation,
         )
         self._field_ids_cache = None
@@ -321,7 +321,9 @@ class JiraClient:
 
         if self.config.is_cloud:
             try:
-                return markdown_to_adf(markdown_text, jira_base_url=self.config.url)
+                return markdown_to_adf(
+                    markdown_text, jira_base_url=self.config.site_url
+                )
             except Exception as e:
                 logger.warning(f"Error converting markdown to ADF: {e}")
                 return {

@@ -191,6 +191,11 @@ class JiraConfig:
     )  # Project keys where jira_add_comment/jira_edit_comment enforce
     # internal-only (non-customer-visible) comments. See
     # JIRA_INTERNAL_ONLY_PROJECTS. Empty by default (guard disabled).
+    site_url: str = ""  # Site address for links to issues; defaults to url
+
+    def __post_init__(self) -> None:
+        if not self.site_url:
+            self.site_url = self.url
 
     @property
     def is_cloud(self) -> bool:
@@ -382,6 +387,7 @@ class JiraConfig:
             client_key_password=client_key_password,
             timeout=timeout,
             internal_only_projects=internal_only_projects,
+            site_url=os.getenv("JIRA_SITE_URL", ""),
         )
 
     def is_auth_configured(self) -> bool:

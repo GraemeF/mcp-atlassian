@@ -282,7 +282,7 @@ class IssuesMixin(
             model_fields = "*all" if fields == "*all" else fields_param
             return JiraIssue.from_api_response(
                 issue,
-                base_url=self.config.url if hasattr(self, "config") else None,
+                base_url=self.config.site_url if hasattr(self, "config") else None,
                 requested_fields=model_fields,
             )
         except HTTPError as http_err:
@@ -571,7 +571,7 @@ class IssuesMixin(
             "status": fields.get("status", {}).get("name", ""),
             "type": fields.get("issuetype", {}).get("name", ""),
             "created": created_date,
-            "url": f"{self.config.url}/browse/{issue_key}",
+            "url": f"{self.config.site_url}/browse/{issue_key}",
         }
 
         # Add assignee if available
@@ -2094,7 +2094,7 @@ class IssuesMixin(
                         created_issues.append(
                             JiraIssue.from_api_response(
                                 issue_data,
-                                base_url=self.config.url
+                                base_url=self.config.site_url
                                 if hasattr(self, "config")
                                 else None,
                             )

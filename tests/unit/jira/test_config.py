@@ -600,3 +600,35 @@ def test_is_auth_configured_cert_missing():
         auth_type="cert",
     )
     assert config.is_auth_configured() is False
+
+
+def test_site_url_defaults_to_url():
+    """Without JIRA_SITE_URL, links to issues use the API URL."""
+    with patch.dict(
+        os.environ,
+        {
+            "JIRA_URL": "https://test.atlassian.net",
+            "JIRA_USERNAME": "test_username",
+            "JIRA_API_TOKEN": "test_token",
+        },
+        clear=True,
+    ):
+        config = JiraConfig.from_env()
+        assert config.site_url == "https://test.atlassian.net"
+
+
+def test_site_url_from_env_for_api_gateway():
+    """JIRA_SITE_URL gives the site address when JIRA_URL is the API gateway."""
+    with patch.dict(
+        os.environ,
+        {
+            "JIRA_URL": "https://api.atlassian.com/ex/jira/cloud-id",
+            "JIRA_SITE_URL": "https://test.atlassian.net",
+            "JIRA_USERNAME": "test_username",
+            "JIRA_API_TOKEN": "test_token",
+        },
+        clear=True,
+    ):
+        config = JiraConfig.from_env()
+        assert config.url == "https://api.atlassian.com/ex/jira/cloud-id"
+        assert config.site_url == "https://test.atlassian.net"
