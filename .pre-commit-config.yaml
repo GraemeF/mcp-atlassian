@@ -61,4 +61,5 @@ repos:
             'markdownify',
             'python-dateutil',
             'types-python-dateutil',
+            'deprecated<3',  # pin: deprecated 3 uses the type statement, rejected under python_version 3.10
         ]
